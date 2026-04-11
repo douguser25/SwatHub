@@ -1,0 +1,668 @@
+-- ██████████████████████████████████████████
+-- █                                        █
+-- █         SWAT HUB V5                   █
+-- █      by douguser25                    █
+-- █   Criador: douguser25                 █
+-- █                                        █
+-- ██████████████████████████████████████████
+-- Compatível com: Delta, Fluxo, Synapse, Arceus X, e outros
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- Anti-Kick
+local function AntiKick()
+    local mt = getrawmetatable and getrawmetatable(game)
+    if mt then
+        local oldNewIndex = mt.__newindex
+        setreadonly(mt, false)
+        mt.__newindex = function(t, k, v)
+            if k == "Parent" and tostring(v) == "nil" and t == LocalPlayer then
+                return
+            end
+            return oldNewIndex(t, k, v)
+        end
+        setreadonly(mt, true)
+    end
+end
+pcall(AntiKick)
+
+-- Anti-Ban
+local function AntiBan()
+    if syn and syn.protect_gui then syn.protect_gui(script) end
+    if protect_gui then protect_gui(script) end
+end
+pcall(AntiBan)
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Character = char
+    Humanoid = char:WaitForChild("Humanoid")
+    HumanoidRootPart = char:WaitForChild("HumanoidRootPart")
+end)
+
+local Settings = {
+    Speed = 16, JumpPower = 50, Gravity = 196,
+    InfiniteJump = false, Noclip = false, VoidProtection = true,
+    AntiSit = false, AntiFling = true, AntiFlashbang = true, AntiLag = true,
+    RGBSpeed = 3, RGBNomeBio = false, RGBCorpo = false, RGBCabelo = false,
+    RGBCasa = false, RGBCarro = false, RGBBicicleta = false,
+    VelocidadeCarro = 200, TurboCarro = 11.3,
+    AutoUnbanCasas = false, AtravessarPorta = false,
+    LoopCampainha = false, LoopBaterPorta = false,
+    FlingAtivo = false, SpamAtivo = false,
+}
+
+local rgbHue = 0
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SwatHubV5"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
+ScreenGui.Parent = gethui and gethui() or game.CoreGui
+
+-- Botão toggle (bolinha)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 55, 0, 55)
+ToggleButton.Position = UDim2.new(0, 10, 0.5, -27)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "SWAT"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextScaled = true
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.ZIndex = 100
+ToggleButton.Parent = ScreenGui
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+local ts = Instance.new("UIStroke", ToggleButton)
+ts.Color = Color3.fromRGB(255,255,255) ts.Thickness = 2
+
+-- Drag toggle
+local draggingT, dragStartT, startPosT = false, nil, nil
+ToggleButton.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingT = true dragStartT = i.Position startPosT = ToggleButton.Position
+    end
+end)
+
+-- Janela principal
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 550, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -275, 0.5, -210)
+MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.ZIndex = 10
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+local ms = Instance.new("UIStroke", MainFrame)
+ms.Color = Color3.fromRGB(200,200,200) ms.Thickness = 1.5
+
+-- TopBar
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 45)
+TopBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TopBar.BorderSizePixel = 0
+TopBar.ZIndex = 11
+TopBar.Parent = MainFrame
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 10)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -50, 1, 0)
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "SWAT HUB  V5   by douguser25"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextScaled = true
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.ZIndex = 12
+TitleLabel.Parent = TopBar
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 35, 0, 35)
+CloseBtn.Position = UDim2.new(1, -40, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextScaled = true
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.BorderSizePixel = 0
+CloseBtn.ZIndex = 13
+CloseBtn.Parent = TopBar
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
+
+-- Drag janela
+local dragging, dragStart, startPos = false, nil, nil
+TopBar.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true dragStart = i.Position startPos = MainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(i)
+    if dragging then
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement then
+            local d = i.Position - dragStart
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset+d.X, startPos.Y.Scale, startPos.Y.Offset+d.Y)
+        end
+    end
+    if draggingT then
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement then
+            local d = i.Position - dragStartT
+            ToggleButton.Position = UDim2.new(startPosT.X.Scale, startPosT.X.Offset+d.X, startPosT.Y.Scale, startPosT.Y.Offset+d.Y)
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false draggingT = false
+    end
+end)
+
+ToggleButton.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+
+-- Sidebar
+local Sidebar = Instance.new("ScrollingFrame")
+Sidebar.Size = UDim2.new(0, 150, 1, -45)
+Sidebar.Position = UDim2.new(0, 0, 0, 45)
+Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+Sidebar.BorderSizePixel = 0
+Sidebar.ScrollBarThickness = 0
+Sidebar.CanvasSize = UDim2.new(0,0,0,0)
+Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Sidebar.ZIndex = 11
+Sidebar.Parent = MainFrame
+local SidebarLayout = Instance.new("UIListLayout", Sidebar)
+SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+SidebarLayout.Padding = UDim.new(0, 2)
+
+local Divider = Instance.new("Frame")
+Divider.Size = UDim2.new(0, 1, 1, -45)
+Divider.Position = UDim2.new(0, 151, 0, 45)
+Divider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Divider.BorderSizePixel = 0
+Divider.ZIndex = 11
+Divider.Parent = MainFrame
+
+-- Content
+local ContentArea = Instance.new("ScrollingFrame")
+ContentArea.Size = UDim2.new(1, -158, 1, -50)
+ContentArea.Position = UDim2.new(0, 155, 0, 48)
+ContentArea.BackgroundTransparency = 1
+ContentArea.BorderSizePixel = 0
+ContentArea.ScrollBarThickness = 3
+ContentArea.ScrollBarImageColor3 = Color3.fromRGB(180,180,180)
+ContentArea.CanvasSize = UDim2.new(0,0,0,0)
+ContentArea.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ContentArea.ZIndex = 11
+ContentArea.Parent = MainFrame
+local ContentLayout = Instance.new("UIListLayout", ContentArea)
+ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ContentLayout.Padding = UDim.new(0, 5)
+local ContentPadding = Instance.new("UIPadding", ContentArea)
+ContentPadding.PaddingLeft = UDim.new(0,8)
+ContentPadding.PaddingRight = UDim.new(0,8)
+ContentPadding.PaddingTop = UDim.new(0,8)
+
+local tabButtons = {}
+local activeTab = nil
+
+local function ClearContent()
+    for _, v in pairs(ContentArea:GetChildren()) do
+        if not v:IsA("UIListLayout") and not v:IsA("UIPadding") then v:Destroy() end
+    end
+end
+
+local function MakeSection(title)
+    local sec = Instance.new("TextLabel")
+    sec.Size = UDim2.new(1, 0, 0, 28)
+    sec.BackgroundTransparency = 1
+    sec.Text = title
+    sec.TextColor3 = Color3.fromRGB(255,255,255)
+    sec.Font = Enum.Font.GothamBold
+    sec.TextSize = 14
+    sec.TextXAlignment = Enum.TextXAlignment.Left
+    sec.ZIndex = 12
+    sec.Parent = ContentArea
+end
+
+local function MakeToggle(labelText, descText, default, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 52)
+    row.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    row.BorderSizePixel = 0
+    row.ZIndex = 12
+    row.Parent = ContentArea
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0,7)
+
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(0.65,0,0.5,0)
+    lbl.Position = UDim2.new(0,10,0,2)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(220,220,220)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 13
+
+    local desc = Instance.new("TextLabel", row)
+    desc.Size = UDim2.new(0.65,0,0.45,0)
+    desc.Position = UDim2.new(0,10,0.5,0)
+    desc.BackgroundTransparency = 1
+    desc.Text = descText
+    desc.TextColor3 = Color3.fromRGB(120,120,120)
+    desc.Font = Enum.Font.Gotham
+    desc.TextSize = 11
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.ZIndex = 13
+
+    local state = default or false
+    local toggleBg = Instance.new("Frame", row)
+    toggleBg.Size = UDim2.new(0,46,0,26)
+    toggleBg.Position = UDim2.new(1,-56,0.5,-13)
+    toggleBg.BackgroundColor3 = state and Color3.fromRGB(255,255,255) or Color3.fromRGB(50,50,50)
+    toggleBg.BorderSizePixel = 0
+    toggleBg.ZIndex = 13
+    Instance.new("UICorner", toggleBg).CornerRadius = UDim.new(1,0)
+
+    local ball = Instance.new("Frame", toggleBg)
+    ball.Size = UDim2.new(0,20,0,20)
+    ball.Position = state and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10)
+    ball.BackgroundColor3 = Color3.fromRGB(10,10,10)
+    ball.BorderSizePixel = 0
+    ball.ZIndex = 14
+    Instance.new("UICorner", ball).CornerRadius = UDim.new(1,0)
+
+    local clickArea = Instance.new("TextButton", row)
+    clickArea.Size = UDim2.new(1,0,1,0)
+    clickArea.BackgroundTransparency = 1
+    clickArea.Text = ""
+    clickArea.ZIndex = 15
+    clickArea.MouseButton1Click:Connect(function()
+        state = not state
+        TweenService:Create(toggleBg, TweenInfo.new(0.15), {BackgroundColor3 = state and Color3.fromRGB(255,255,255) or Color3.fromRGB(50,50,50)}):Play()
+        TweenService:Create(ball, TweenInfo.new(0.15), {Position = state and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10)}):Play()
+        if callback then callback(state) end
+    end)
+end
+
+local function MakeButton(labelText, descText, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1,0,0,52)
+    row.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    row.BorderSizePixel = 0
+    row.ZIndex = 12
+    row.Parent = ContentArea
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0,7)
+
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(0.8,0,0.5,0)
+    lbl.Position = UDim2.new(0,10,0,2)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(220,220,220)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 13
+
+    local desc = Instance.new("TextLabel", row)
+    desc.Size = UDim2.new(0.8,0,0.45,0)
+    desc.Position = UDim2.new(0,10,0.5,0)
+    desc.BackgroundTransparency = 1
+    desc.Text = descText
+    desc.TextColor3 = Color3.fromRGB(120,120,120)
+    desc.Font = Enum.Font.Gotham
+    desc.TextSize = 11
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.ZIndex = 13
+
+    local arrow = Instance.new("TextLabel", row)
+    arrow.Size = UDim2.new(0,20,1,0)
+    arrow.Position = UDim2.new(1,-28,0,0)
+    arrow.BackgroundTransparency = 1
+    arrow.Text = "›"
+    arrow.TextColor3 = Color3.fromRGB(180,180,180)
+    arrow.Font = Enum.Font.GothamBold
+    arrow.TextSize = 22
+    arrow.ZIndex = 13
+
+    local clickArea = Instance.new("TextButton", row)
+    clickArea.Size = UDim2.new(1,0,1,0)
+    clickArea.BackgroundTransparency = 1
+    clickArea.Text = ""
+    clickArea.ZIndex = 15
+    clickArea.MouseButton1Click:Connect(function() if callback then callback() end end)
+end
+
+local function MakeSlider(labelText, descText, min, max, default, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1,0,0,65)
+    row.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    row.BorderSizePixel = 0
+    row.ZIndex = 12
+    row.Parent = ContentArea
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0,7)
+
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(0.7,0,0,22)
+    lbl.Position = UDim2.new(0,10,0,4)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(220,220,220)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 13
+
+    local valLbl = Instance.new("TextLabel", row)
+    valLbl.Size = UDim2.new(0.25,0,0,22)
+    valLbl.Position = UDim2.new(0.73,0,0,4)
+    valLbl.BackgroundTransparency = 1
+    valLbl.Text = tostring(default)
+    valLbl.TextColor3 = Color3.fromRGB(255,255,255)
+    valLbl.Font = Enum.Font.GothamBold
+    valLbl.TextSize = 13
+    valLbl.TextXAlignment = Enum.TextXAlignment.Right
+    valLbl.ZIndex = 13
+
+    local sliderBg = Instance.new("Frame", row)
+    sliderBg.Size = UDim2.new(1,-20,0,8)
+    sliderBg.Position = UDim2.new(0,10,0,42)
+    sliderBg.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    sliderBg.BorderSizePixel = 0
+    sliderBg.ZIndex = 13
+    Instance.new("UICorner", sliderBg).CornerRadius = UDim.new(1,0)
+
+    local fillPct = (default - min)/(max - min)
+    local sliderFill = Instance.new("Frame", sliderBg)
+    sliderFill.Size = UDim2.new(fillPct,0,1,0)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(200,200,200)
+    sliderFill.BorderSizePixel = 0
+    sliderFill.ZIndex = 14
+    Instance.new("UICorner", sliderFill).CornerRadius = UDim.new(1,0)
+
+    local sliding = false
+    sliderBg.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true end
+    end)
+    UserInputService.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if sliding then
+            local pct = math.clamp((i.Position.X - sliderBg.AbsolutePosition.X)/sliderBg.AbsoluteSize.X,0,1)
+            local val = math.floor(min+(max-min)*pct)
+            sliderFill.Size = UDim2.new(pct,0,1,0)
+            valLbl.Text = tostring(val)
+            if callback then callback(val) end
+        end
+    end)
+end
+
+local function MakeSidebarTab(name, icon, order)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1,0,0,40)
+    btn.BackgroundColor3 = Color3.fromRGB(15,15,15)
+    btn.BorderSizePixel = 0
+    btn.Text = icon.."  "..name
+    btn.TextColor3 = Color3.fromRGB(160,160,160)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 13
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.ZIndex = 12
+    btn.LayoutOrder = order
+    btn.Parent = Sidebar
+    local p = Instance.new("UIPadding", btn)
+    p.PaddingLeft = UDim.new(0,12)
+    tabButtons[name] = btn
+    return btn
+end
+
+local function SetActiveTab(name)
+    for n, b in pairs(tabButtons) do
+        if n == name then b.BackgroundColor3 = Color3.fromRGB(35,35,35) b.TextColor3 = Color3.fromRGB(255,255,255)
+        else b.BackgroundColor3 = Color3.fromRGB(15,15,15) b.TextColor3 = Color3.fromRGB(160,160,160) end
+    end
+    ClearContent()
+    activeTab = name
+end
+
+-- ABAS
+local creditsBtn = MakeSidebarTab("Credits","ℹ",1)
+creditsBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Credits")
+    MakeSection("Créditos do Hub")
+    local f = Instance.new("Frame", ContentArea)
+    f.Size = UDim2.new(1,0,0,110) f.BackgroundColor3 = Color3.fromRGB(18,18,18) f.BorderSizePixel = 0 f.ZIndex = 12
+    Instance.new("UICorner",f).CornerRadius = UDim.new(0,7)
+    local function AI(lbl,val,y)
+        local l=Instance.new("TextLabel",f) l.Size=UDim2.new(1,-20,0,22) l.Position=UDim2.new(0,10,0,y)
+        l.BackgroundTransparency=1 l.Text=lbl..":  "..val l.TextColor3=Color3.fromRGB(200,200,200)
+        l.Font=Enum.Font.Gotham l.TextSize=13 l.TextXAlignment=Enum.TextXAlignment.Left l.ZIndex=13
+    end
+    AI("Hub","SWAT HUB V5",6) AI("Versão","V5",30) AI("Criador","douguser25",54) AI("By","douguser25",78)
+end)
+
+local jogadorBtn = MakeSidebarTab("Jogador","👤",2)
+jogadorBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Jogador")
+    MakeSection("Jogador")
+    MakeSlider("Speed Player","Velocidade do jogador",1,100,Settings.Speed,function(v) Settings.Speed=v if Humanoid then Humanoid.WalkSpeed=v end end)
+    MakeSlider("JumpPower","Altura do pulo",1,200,Settings.JumpPower,function(v) Settings.JumpPower=v if Humanoid then Humanoid.JumpPower=v end end)
+    MakeSlider("Gravity","Gravidade",10,500,Settings.Gravity,function(v) Settings.Gravity=v workspace.Gravity=v end)
+    MakeToggle("Infinite Jump","Pular infinitamente",Settings.InfiniteJump,function(v) Settings.InfiniteJump=v end)
+end)
+
+local jogadoresBtn = MakeSidebarTab("Jogadores","👥",3)
+jogadoresBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Jogadores")
+    MakeSection("Jogadores no Servidor")
+    MakeButton("Atualizar Lista","Clique para atualizar",function()
+        for _,v in pairs(ContentArea:GetChildren()) do
+            if not v:IsA("UIListLayout") and not v:IsA("UIPadding") and not v:IsA("TextLabel") then v:Destroy() end
+        end
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr~=LocalPlayer then
+                local row=Instance.new("Frame",ContentArea)
+                row.Size=UDim2.new(1,0,0,44) row.BackgroundColor3=Color3.fromRGB(18,18,18)
+                row.BorderSizePixel=0 row.ZIndex=12
+                Instance.new("UICorner",row).CornerRadius=UDim.new(0,7)
+                local nl=Instance.new("TextLabel",row)
+                nl.Size=UDim2.new(0.6,0,1,0) nl.Position=UDim2.new(0,10,0,0)
+                nl.BackgroundTransparency=1 nl.Text=plr.Name nl.TextColor3=Color3.fromRGB(220,220,220)
+                nl.Font=Enum.Font.GothamBold nl.TextSize=13 nl.TextXAlignment=Enum.TextXAlignment.Left nl.ZIndex=13
+                local tb=Instance.new("TextButton",row)
+                tb.Size=UDim2.new(0,70,0,28) tb.Position=UDim2.new(1,-80,0.5,-14)
+                tb.BackgroundColor3=Color3.fromRGB(50,50,50) tb.Text="Teleport"
+                tb.TextColor3=Color3.fromRGB(255,255,255) tb.Font=Enum.Font.Gotham tb.TextSize=11
+                tb.BorderSizePixel=0 tb.ZIndex=13
+                Instance.new("UICorner",tb).CornerRadius=UDim.new(0,6)
+                tb.MouseButton1Click:Connect(function()
+                    if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                        HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame+Vector3.new(2,0,0)
+                    end
+                end)
+            end
+        end
+    end)
+end)
+
+local extraBtn = MakeSidebarTab("Extra","✨",4)
+extraBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Extra")
+    MakeSection("Extras")
+    MakeButton("God Mode","Personagem invencível",function() if Humanoid then Humanoid.MaxHealth=math.huge Humanoid.Health=math.huge end end)
+    MakeButton("Okarum","Animação especial",function() end)
+    MakeButton("Mago","Efeito de mago",function() end)
+    MakeButton("Glitcher Hat","Chapéu glitch",function() end)
+    MakeButton("Cowboy","Chapéu de cowboy",function() end)
+    MakeButton("Superman","Pose de Superman",function() end)
+end)
+
+local avatarBtn = MakeSidebarTab("Avatar","👕",5)
+avatarBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Avatar")
+    MakeSection("Copy Avatar")
+    MakeButton("Atualizar Lista","Atualiza jogadores",function() end)
+    MakeButton("Copy Avatar","Copia avatar do jogador",function() end)
+    MakeSection("Partes do Corpo")
+    MakeButton("Equipar Tronco","Aplica ID no tronco",function() end)
+    MakeButton("Equipar Braço Direito","Aplica ID no braço direito",function() end)
+    MakeButton("Equipar Braço Esquerdo","Aplica ID no braço esquerdo",function() end)
+    MakeButton("Equipar Perna Direita","Aplica ID na perna direita",function() end)
+end)
+
+local houseBtn = MakeSidebarTab("House","🏠",6)
+houseBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("House")
+    MakeSection("Funções de Casa")
+    MakeButton("Desbanir das Casas","Remove ban de casas",function() end)
+    MakeToggle("Auto Unban Casas","Desbanir automaticamente",Settings.AutoUnbanCasas,function(v) Settings.AutoUnbanCasas=v end)
+    MakeButton("Atualizar Casas","Atualiza lista de casas",function() end)
+    MakeButton("TP para Cofre","Teleporta para o cofre",function() end)
+    MakeButton("Teleportar para Casa","Vai para sua casa",function() end)
+    MakeToggle("Atravessar Porta","Passa por portas",Settings.AtravessarPorta,function(v) Settings.AtravessarPorta=v end)
+    MakeToggle("Loop Tocar Campainha","Toca campainha em loop",Settings.LoopCampainha,function(v) Settings.LoopCampainha=v end)
+    MakeToggle("Loop Bater na Porta","Bate na porta em loop",Settings.LoopBaterPorta,function(v) Settings.LoopBaterPorta=v end)
+end)
+
+local carBtn = MakeSidebarTab("Car","🚗",7)
+carBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Car")
+    MakeSection("Speed e Turbo (Meu Carro)")
+    MakeSlider("Velocidade Máxima","Velocidade do carro",50,500,Settings.VelocidadeCarro,function(v) Settings.VelocidadeCarro=v end)
+    MakeButton("Aplicar Velocidade","Aplica velocidade no carro",function()
+        local seat = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("VehicleSeat")
+        if seat then seat.MaxSpeed=Settings.VelocidadeCarro end
+    end)
+    MakeButton("Aplicar Turbo","Aplica turbo no carro",function() end)
+    MakeSection("Interação com Veículos")
+    MakeButton("Trazer Todos os Carros","Traz todos os carros",function() end)
+    MakeButton("Destruir Carro Selecionado","Remove o carro",function() end)
+    MakeButton("Trazer Carro Selecionado","Traz o carro",function() end)
+end)
+
+local toolsBtn = MakeSidebarTab("Tools","🔧",8)
+toolsBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Tools")
+    MakeSection("Custom Word")
+    MakeButton("Build Custom Word","Constrói palavra com Tools",function() end)
+    MakeSection("Spam de Tools")
+    MakeToggle("Ativar Spam","Ativa spam de tools",Settings.SpamAtivo,function(v) Settings.SpamAtivo=v end)
+end)
+
+local rgbBtn = MakeSidebarTab("RGB","🎨",9)
+rgbBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("RGB")
+    MakeSection("RGB para você")
+    MakeSlider("Velocidade RGB","Velocidade do efeito",1,10,Settings.RGBSpeed,function(v) Settings.RGBSpeed=v end)
+    MakeToggle("Nome + Bio RGB","Nome e bio mudam de cor",Settings.RGBNomeBio,function(v) Settings.RGBNomeBio=v end)
+    MakeToggle("RGB Corpo","Efeito RGB no corpo",Settings.RGBCorpo,function(v) Settings.RGBCorpo=v end)
+    MakeToggle("RGB Cabelo","Efeito RGB no cabelo",Settings.RGBCabelo,function(v) Settings.RGBCabelo=v end)
+    MakeSection("RGB Casa e Veículos")
+    MakeToggle("RGB Casa","Efeito RGB na casa",Settings.RGBCasa,function(v) Settings.RGBCasa=v end)
+    MakeToggle("Carro RGB","Altera cor do carro",Settings.RGBCarro,function(v) Settings.RGBCarro=v end)
+    MakeToggle("RGB Bicicleta","Efeito RGB na bicicleta",Settings.RGBBicicleta,function(v) Settings.RGBBicicleta=v end)
+end)
+
+local musicAllBtn = MakeSidebarTab("Music All","🎵",10)
+musicAllBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Music All")
+    MakeSection("Tocar Som no Servidor")
+    MakeButton("Tocar Som","Toca áudio no servidor",function() end)
+    MakeToggle("Loop","Coloca o som em loop",false,function(v) end)
+    MakeSection("Tocar Meme no Servidor")
+    MakeButton("Pankapakan","Toca som pankapakan",function() end)
+    MakeButton("Meme Inglês","Toca meme em inglês",function() end)
+    MakeButton("Risada","Toca som de risada",function() end)
+    MakeButton("Gemido","Toca som de gemido",function() end)
+end)
+
+local musicBtn = MakeSidebarTab("Music","🎶",11)
+musicBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Music")
+    MakeSection("Músicas")
+    MakeButton("Forró","Músicas de forró",function() end)
+    MakeButton("Músicas Aleatórias","Músicas e memes aleatórios",function() end)
+    MakeButton("SoundVibes","Sons vibes",function() end)
+    MakeButton("Rock","Músicas de rock",function() end)
+    MakeButton("Inglês","Músicas em inglês",function() end)
+    MakeButton("Rap","Músicas de rap",function() end)
+    MakeButton("Funk","Funk (MTG Assombra Matrix)",function() end)
+    MakeButton("Phonk","Músicas phonk",function() end)
+    MakeButton("Stop ALL Music","Para todas as músicas",function()
+        for _,v in pairs(workspace:GetDescendants()) do if v:IsA("Sound") then v:Stop() end end
+    end)
+end)
+
+local trollBtn = MakeSidebarTab("Troll","😈",12)
+trollBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Troll")
+    MakeSection("Fling")
+    MakeToggle("Ativar Fling","Lança jogadores",Settings.FlingAtivo,function(v) Settings.FlingAtivo=v end)
+    MakeButton("Bola Fling Orbitando","Fling com bola orbitando",function() end)
+    MakeButton("Fling Bola ALL V4","Fling em todos",function() end)
+    MakeButton("Parar Tudo","Para todos os trolls",function() Settings.FlingAtivo=false Settings.SpamAtivo=false end)
+    MakeSection("Bring All")
+    MakeButton("Iniciar Bring All Bus","Traz todos para o bus",function() end)
+    MakeButton("Parar Bring All Bus","Para bring all",function() end)
+end)
+
+local protectionBtn = MakeSidebarTab("Protection","🛡",13)
+protectionBtn.MouseButton1Click:Connect(function()
+    SetActiveTab("Protection")
+    MakeSection("Proteções")
+    MakeToggle("Noclip","Atravessa paredes",Settings.Noclip,function(v) Settings.Noclip=v end)
+    MakeToggle("Void Protection","Protege contra vazio",Settings.VoidProtection,function(v) Settings.VoidProtection=v end)
+    MakeToggle("Anti-Sit","Impede de ser sentado",Settings.AntiSit,function(v) Settings.AntiSit=v end)
+    MakeToggle("Anti-Fling","Protege contra fling",Settings.AntiFling,function(v) Settings.AntiFling=v end)
+    MakeToggle("Anti Flashbang/Skybox","Imune a flashbang",Settings.AntiFlashbang,function(v) Settings.AntiFlashbang=v end)
+    MakeToggle("Anti-Lag","Remove lag de tools",Settings.AntiLag,function(v) Settings.AntiLag=v end)
+end)
+
+SetActiveTab("Credits")
+creditsBtn.MouseButton1Click:Fire()
+
+-- LOOPS
+UserInputService.JumpRequest:Connect(function()
+    if Settings.InfiniteJump and Humanoid then Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+RunService.Stepped:Connect(function()
+    if Settings.Noclip and Character then
+        for _,p in pairs(Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if Settings.VoidProtection and HumanoidRootPart then
+        if HumanoidRootPart.Position.Y < -80 then HumanoidRootPart.CFrame=CFrame.new(0,10,0) end
+    end
+    if Settings.AntiFling and HumanoidRootPart then
+        if HumanoidRootPart.Velocity.Magnitude > 200 then HumanoidRootPart.Velocity=Vector3.new(0,0,0) end
+    end
+end)
+
+RunService.Heartbeat:Connect(function(dt)
+    rgbHue=(rgbHue+dt*Settings.RGBSpeed*0.05)%1
+    local color=Color3.fromHSV(rgbHue,1,1)
+    if Settings.RGBCorpo and Character then
+        for _,p in pairs(Character:GetDescendants()) do
+            if p:IsA("BasePart") and p.Name~="HumanoidRootPart" then p.Color=color end
+        end
+    end
+end)
+
+print("✅ SWAT HUB V5 carregado! by douguser25")
