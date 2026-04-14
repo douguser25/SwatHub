@@ -1,0 +1,229 @@
+-- SWAT HUB V1 FULL FRAMEWORK
+
+local KEY = "SWATBLACK"
+
+repeat task.wait() until game:IsLoaded()
+
+-- KEY SYSTEM
+local keyGui = Instance.new("ScreenGui", game.CoreGui)
+keyGui.Name = "SwatKey"
+
+local keyFrame = Instance.new("Frame", keyGui)
+keyFrame.Size = UDim2.new(0,320,0,170)
+keyFrame.Position = UDim2.new(.5,-160,.5,-85)
+keyFrame.BackgroundColor3 = Color3.fromRGB(10,10,10)
+keyFrame.Active = true
+keyFrame.Draggable = true
+Instance.new("UIStroke",keyFrame).Color = Color3.new(1,1,1)
+
+local keyTitle = Instance.new("TextLabel",keyFrame)
+keyTitle.Size = UDim2.new(1,0,0,40)
+keyTitle.Text = "Swat Hub v1"
+keyTitle.TextColor3 = Color3.new(1,1,1)
+keyTitle.BackgroundTransparency = 1
+keyTitle.Font = Enum.Font.GothamBold
+
+local keyBox = Instance.new("TextBox",keyFrame)
+keyBox.Size = UDim2.new(1,-20,0,35)
+keyBox.Position = UDim2.new(0,10,0,55)
+keyBox.PlaceholderText = "Enter Key"
+keyBox.BackgroundColor3 = Color3.fromRGB(20,20,20)
+keyBox.TextColor3 = Color3.new(1,1,1)
+
+local keyBtn = Instance.new("TextButton",keyFrame)
+keyBtn.Size = UDim2.new(1,-20,0,30)
+keyBtn.Position = UDim2.new(0,10,0,105)
+keyBtn.Text = "Unlock"
+keyBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+keyBtn.TextColor3 = Color3.new(1,1,1)
+
+local unlocked = false
+keyBtn.MouseButton1Click:Connect(function()
+if keyBox.Text == KEY then
+unlocked = true
+keyGui:Destroy()
+else
+keyBtn.Text = "Wrong Key"
+task.wait(1)
+keyBtn.Text = "Unlock"
+end
+end)
+
+repeat task.wait() until unlocked
+
+-- MAIN GUI
+local gui = Instance.new("ScreenGui",game.CoreGui)
+gui.Name = "SwatHub"
+
+local main = Instance.new("Frame",gui)
+main.Size = UDim2.new(0,700,0,450)
+main.Position = UDim2.new(.5,-350,.5,-225)
+main.BackgroundColor3 = Color3.fromRGB(10,10,10)
+main.Active = true
+main.Draggable = true
+Instance.new("UIStroke",main).Color = Color3.new(1,1,1)
+
+-- TOP
+local top = Instance.new("Frame",main)
+top.Size = UDim2.new(1,0,0,40)
+top.BackgroundTransparency = 1
+
+local logo = Instance.new("ImageLabel",top)
+logo.Size = UDim2.new(0,30,0,30)
+logo.Position = UDim2.new(0,10,0,5)
+logo.BackgroundTransparency = 1
+logo.Image = "rbxassetid://10590477450"
+
+local title = Instance.new("TextLabel",top)
+title.Text = "Swat Hub v1"
+title.Position = UDim2.new(0,50,0,0)
+title.Size = UDim2.new(0,200,1,0)
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+
+local close = Instance.new("TextButton",top)
+close.Text = "X"
+close.Size = UDim2.new(0,30,1,0)
+close.Position = UDim2.new(1,-30,0,0)
+close.BackgroundTransparency = 1
+close.TextColor3 = Color3.new(1,1,1)
+
+close.MouseButton1Click:Connect(function()
+gui:Destroy()
+end)
+
+-- SIDEBAR
+local side = Instance.new("Frame",main)
+side.Size = UDim2.new(0,170,1,-40)
+side.Position = UDim2.new(0,0,0,40)
+side.BackgroundColor3 = Color3.fromRGB(15,15,15)
+
+local container = Instance.new("Frame",main)
+container.Size = UDim2.new(1,-170,1,-40)
+container.Position = UDim2.new(0,170,0,40)
+container.BackgroundTransparency = 1
+
+Instance.new("UIListLayout",side).Padding = UDim.new(0,4)
+
+local tabs = {
+"Credits","Jogador","Jogadores","Extra",
+"Avatar","House","Car","Tools",
+"Visual","Music","Troll","Protection"
+}
+
+local pages = {}
+
+for _,name in pairs(tabs) do
+
+local btn = Instance.new("TextButton",side)
+btn.Size = UDim2.new(1,0,0,30)
+btn.Text = name
+btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+btn.TextColor3 = Color3.new(1,1,1)
+
+Instance.new("UIStroke",btn).Color = Color3.new(1,1,1)
+
+local page = Instance.new("ScrollingFrame",container)
+page.Size = UDim2.new(1,0,1,0)
+page.Visible = false
+page.CanvasSize = UDim2.new(0,0,0,1000)
+page.BackgroundTransparency = 1
+
+Instance.new("UIListLayout",page).Padding = UDim.new(0,6)
+
+pages[name] = page
+
+btn.MouseButton1Click:Connect(function()
+for _,p in pairs(pages) do
+p.Visible = false
+end
+page.Visible = true
+end)
+
+end
+
+pages["Credits"].Visible = true
+
+-- TOGGLE
+function toggle(parent,text)
+local t = Instance.new("TextButton",parent)
+t.Size = UDim2.new(1,-10,0,30)
+t.Text = text.." : OFF"
+t.BackgroundColor3 = Color3.fromRGB(20,20,20)
+t.TextColor3 = Color3.new(1,1,1)
+
+local state = false
+t.MouseButton1Click:Connect(function()
+state = not state
+t.Text = text.." : "..(state and "ON" or "OFF")
+end)
+end
+
+-- SLIDER
+function slider(parent,text)
+
+local frame = Instance.new("Frame",parent)
+frame.Size = UDim2.new(1,-10,0,40)
+frame.BackgroundTransparency = 1
+
+local label = Instance.new("TextLabel",frame)
+label.Size = UDim2.new(1,0,0,15)
+label.Text = text.." : 0"
+label.TextColor3 = Color3.new(1,1,1)
+label.BackgroundTransparency = 1
+
+local bar = Instance.new("Frame",frame)
+bar.Size = UDim2.new(1,0,0,6)
+bar.Position = UDim2.new(0,0,0,20)
+bar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+
+local fill = Instance.new("Frame",bar)
+fill.Size = UDim2.new(.3,0,1,0)
+fill.BackgroundColor3 = Color3.new(1,1,1)
+
+end
+
+-- JOGADOR
+slider(pages["Jogador"],"Speed")
+slider(pages["Jogador"],"JumpPower")
+slider(pages["Jogador"],"Gravity")
+toggle(pages["Jogador"],"Fly")
+toggle(pages["Jogador"],"NoClip")
+toggle(pages["Jogador"],"Infinite Jump")
+
+-- CAR
+toggle(pages["Car"],"Teleport Car")
+toggle(pages["Car"],"Bring Car")
+slider(pages["Car"],"Car Speed")
+
+-- VISUAL
+toggle(pages["Visual"],"FullBright")
+toggle(pages["Visual"],"No Fog")
+slider(pages["Visual"],"FOV")
+
+-- PROTECTION
+toggle(pages["Protection"],"Anti Kick")
+toggle(pages["Protection"],"Rejoin")
+
+-- MUSIC VISUAL
+local now = Instance.new("TextLabel",pages["Music"])
+now.Size = UDim2.new(1,-10,0,20)
+now.Text = "Now Playing: None"
+now.TextColor3 = Color3.new(1,1,1)
+now.BackgroundTransparency = 1
+
+local musics = {"Phonk","Funk","Drift","Sigma","Chill","Trap","LoFi"}
+
+for _,m in pairs(musics) do
+local b = Instance.new("TextButton",pages["Music"])
+b.Size = UDim2.new(1,-10,0,30)
+b.Text = m
+b.BackgroundColor3 = Color3.fromRGB(20,20,20)
+b.TextColor3 = Color3.new(1,1,1)
+
+b.MouseButton1Click:Connect(function()
+now.Text = "Now Playing: "..m
+end)
+
+end
